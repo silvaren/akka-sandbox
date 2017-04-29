@@ -31,6 +31,7 @@ libraryDependencies ++= {
 lazy val root = project.in(file(".")).configs(IntegrationTest)
 Defaults.itSettings
 Revolver.settings
+Revolver.enableDebugging(port = 5050, suspend = false)
 enablePlugins(JavaAppPackaging)
 
 

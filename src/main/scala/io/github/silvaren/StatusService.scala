@@ -13,7 +13,7 @@ trait StatusService extends BaseService {
   protected case class Status(uptime: String)
 
   override protected def routes: Route =
-    get {
+    post {
       log.info("/status executed")
       complete(Status(Duration(ManagementFactory.getRuntimeMXBean.getUptime, MILLISECONDS).toString()))
     }
