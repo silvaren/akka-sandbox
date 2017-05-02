@@ -1,11 +1,12 @@
 package io.github.silvaren
 
 import akka.pattern.ask
-import akka.actor.ActorRef
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.{Route, RouteResult}
+import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Sink, Source}
 import com.amazonaws.services.lambda.runtime.Context
 
@@ -14,6 +15,7 @@ import scala.concurrent.duration._
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.github.silvaren.Main.routes
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class LambdaProxyEvent(resource: String,
                             path: String,
@@ -64,6 +66,9 @@ class Server (routes: Route) {
     }
 
   }
+
+  implicit val system       = ActorSystem()
+  implicit val materializer = ActorMaterializer()
 
   def proxy(input: String, context: Context): String = {
     val event = decode[LambdaProxyEvent](input).right.get

@@ -14,7 +14,6 @@ trait StatusService extends BaseService {
 
   override protected def routes: Route =
     post {
-      log.info("/status executed")
       complete(Status(Duration(ManagementFactory.getRuntimeMXBean.getUptime, MILLISECONDS).toString()))
     }
 }

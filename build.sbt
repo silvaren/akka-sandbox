@@ -4,8 +4,6 @@ version := "0.0.2"
 scalaVersion := "2.12.2"
 scalacOptions := Seq("-unchecked", "-feature", "-deprecation", "-encoding", "utf8")
 
-resolvers += Resolver.jcenterRepo
-
 libraryDependencies ++= {
   val catsV          = "0.9.0"
   val akkaHttpV      = "10.0.5"
@@ -24,7 +22,9 @@ libraryDependencies ++= {
     "io.circe"          %% "circe-parser"    % circeV,
     "org.scalamock"     %% "scalamock-scalatest-support" % scalaMockV     % "it,test",
     "com.ironcorelabs"  %% "cats-scalatest"              % catsScalatestV % "it,test",
-    "com.typesafe.akka" %% "akka-http-testkit"           % akkaHttpV      % "it,test"
+    "com.typesafe.akka" %% "akka-http-testkit"           % akkaHttpV      % "it,test",
+    "org.specs2"        %% "specs2-core"            % "3.8.9"        % "it,test"
+
   )
 }
 
