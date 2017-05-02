@@ -28,6 +28,8 @@ libraryDependencies ++= {
   )
 }
 
+libraryDependencies += "com.amazonaws" % "aws-lambda-java-core" % "1.1.0"
+
 lazy val root = project.in(file(".")).configs(IntegrationTest)
 Defaults.itSettings
 Revolver.settings

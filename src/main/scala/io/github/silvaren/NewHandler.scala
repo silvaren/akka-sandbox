@@ -24,8 +24,7 @@ object NewHandler extends RequestStreamHandler {
         case '\t' => "\\t"
         case _ => c + ""
       }
-    )
-    chars.reduce(_ + _)
+    ).mkString
   }
 
   def shutdown(): Unit = Boot.system.shutdown()

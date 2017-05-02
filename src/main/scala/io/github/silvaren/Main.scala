@@ -3,7 +3,7 @@ package io.github.silvaren
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.{Directives, Route}
+import akka.http.scaladsl.server.{Directives, Route, RouteResult}
 import akka.stream.ActorMaterializer
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
@@ -25,6 +25,8 @@ object Main extends App with Config with Services {
   override protected def log      = Logging(system, "service")
   override protected def executor = system.dispatcher
 
+  val handlerFlow = RouteResult.route2HandlerFlow(routes)
+  handlerFlow.
   Http().bindAndHandle(routes, httpConfig.interface, httpConfig.port)
 }
 
