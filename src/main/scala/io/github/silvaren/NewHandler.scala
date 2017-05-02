@@ -8,9 +8,9 @@ import io.circe.generic.auto._
 
 case class IntegrationResponse(statusCode: Int, headers: Option[Map[String,String]], body: String)
 
-object NewHandler extends RequestStreamHandler {
+object NewHandler extends RequestStreamHandler with Config with Services {
 
-  val server = new Server(Boot.service)
+  val server = new Server(routes)
 
   def jsonStringEscape(jsonString: String): String = {
     val chars = jsonString.map(c =>
@@ -24,10 +24,9 @@ object NewHandler extends RequestStreamHandler {
         case '\t' => "\\t"
         case _ => c + ""
       }
-    ).mkString
+    )
+    chars.mkString
   }
-
-  def shutdown(): Unit = Boot.system.shutdown()
 
   override def handleRequest(is: InputStream, os: OutputStream, context: Context): Unit = {
     val input = scala.io.Source.fromInputStream(is).mkString

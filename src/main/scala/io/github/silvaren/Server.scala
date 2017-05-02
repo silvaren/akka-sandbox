@@ -5,12 +5,15 @@ import akka.actor.ActorRef
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.RawHeader
+import akka.http.scaladsl.server.{Route, RouteResult}
+import akka.stream.scaladsl.{Keep, Sink, Source}
 import com.amazonaws.services.lambda.runtime.Context
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import io.circe.generic.auto._
 import io.circe.parser._
+import io.github.silvaren.Main.routes
 
 case class LambdaProxyEvent(resource: String,
                             path: String,
@@ -44,7 +47,7 @@ case class Identity(cognitoIdentityPoolId: Option[String],
                     userAgent: String,
                     user: Option[String])
 
-class Server (actor: ActorRef) {
+class Server (routes: Route) {
 
   def getMultiPartFormDataMediaType(contentType: String): MediaType.Multipart =
     MediaTypes.`multipart/form-data`.withBoundary(contentType.drop(contentType.indexOf("boundary=") + 9))
@@ -65,7 +68,8 @@ class Server (actor: ActorRef) {
   def proxy(input: String, context: Context): String = {
     val event = decode[LambdaProxyEvent](input).right.get
     println(event)
-    val response = actor ?
+    val handlerFlow = RouteResult.route2HandlerFlow(routes)
+    val request =
       HttpRequest(
         HttpMethods.getForKey(event.httpMethod).get,
         Uri(event.path).withQuery(Query(event.queryStringParameters.getOrElse(Map()))),
@@ -73,7 +77,8 @@ class Server (actor: ActorRef) {
         getEntity(event.headers.getOrElse(Map()).toSeq.find(
           keyValue => keyValue._1 == "content-type").map(_._2).getOrElse("binary"), event)
       )
-    val responseString = response.map(_.asInstanceOf[HttpResponse]).map(_.entity.toString)
+    val response = Source.single(request).via(handlerFlow).toMat(Sink.head)(Keep.right).run()
+    val responseString = response.map(_.entity.toString)
     Await.result(responseString, 30 seconds)
   }
 

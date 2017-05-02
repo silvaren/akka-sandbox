@@ -10,8 +10,8 @@ import de.heikoseeberger.akkahttpcirce.CirceSupport
 import scala.concurrent.ExecutionContext
 
 trait BaseComponent extends Config {
-  protected implicit def log: LoggingAdapter
-  protected implicit def executor: ExecutionContext
+//  protected implicit def log: LoggingAdapter
+//  protected implicit def executor: ExecutionContext
 }
 
 trait BaseService extends BaseComponent with CirceSupport {
@@ -25,8 +25,6 @@ object Main extends App with Config with Services {
   override protected def log      = Logging(system, "service")
   override protected def executor = system.dispatcher
 
-  val handlerFlow = RouteResult.route2HandlerFlow(routes)
-  handlerFlow.
   Http().bindAndHandle(routes, httpConfig.interface, httpConfig.port)
 }
 
