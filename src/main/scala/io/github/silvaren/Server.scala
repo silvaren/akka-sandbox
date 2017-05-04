@@ -55,6 +55,7 @@ class Server (routes: Route) {
     MediaTypes.`multipart/form-data`.withBoundary(contentType.drop(contentType.indexOf("boundary=") + 9))
 
   def getEntity(contentType: String, event: LambdaProxyEvent): RequestEntity = {
+    println(contentType)
     contentType match {
       case str if str contains "application/json" => event.body.map(body => HttpEntity(ContentTypes.`application/json`, body)).
         getOrElse(HttpEntity.Empty)
@@ -74,6 +75,8 @@ class Server (routes: Route) {
     val event = decode[LambdaProxyEvent](input).right.get
     println(event)
     val handlerFlow = RouteResult.route2HandlerFlow(routes)
+    println(getEntity(event.headers.getOrElse(Map()).toSeq.find(
+      keyValue => keyValue._1 == "content-type").map(_._2).getOrElse("binary"), event))
     val request =
       HttpRequest(
         HttpMethods.getForKey(event.httpMethod).get,

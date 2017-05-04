@@ -24,8 +24,8 @@ object Main extends App with Config with Services {
   implicit val system       = ActorSystem()
   implicit val materializer = ActorMaterializer()
 
-//  override protected def log      = Logging(system, "service")
-//  override protected def executor = system.dispatcher
+  //  override protected def log      = Logging(system, "service")
+  //  override protected def executor = system.dispatcher
 
   val flow: Flow[HttpRequest, HttpResponse, Any] = routes
 
@@ -33,16 +33,5 @@ object Main extends App with Config with Services {
 }
 
 trait Services extends StatusService {
-  import Directives._
 
-  private val apiVersion = "v1"
-  private val allRoutes = Map(
-    "status" -> super[StatusService].routes
-  )
-
-  protected override val routes: Route = pathPrefix(apiVersion) {
-    allRoutes.map {
-      case (k, v) => path(k)(v)
-    } reduce (_ ~ _)
-  }
 }
