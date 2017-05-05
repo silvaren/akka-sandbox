@@ -75,16 +75,14 @@ class Server (routes: Route) {
     val event = decode[LambdaProxyEvent](input).right.get
     println(event)
     val handlerFlow = RouteResult.route2HandlerFlow(routes)
-    println(getEntity(event.headers.getOrElse(Map()).toSeq.find(
-      keyValue => keyValue._1 == "content-type").map(_._2).getOrElse("binary"), event))
+    val entity = getEntity(event.headers.getOrElse(Map()).toSeq.find(
+      keyValue => keyValue._1 == "content-type").map(_._2).getOrElse("binary"), event)
     val request =
       HttpRequest(
         HttpMethods.getForKey(event.httpMethod).get,
         Uri(event.path).withQuery(Query(event.queryStringParameters.getOrElse(Map()))),
         event.headers.getOrElse(Map()).toList.map(x => RawHeader(x._1, x._2)),
-        getEntity(event.headers.getOrElse(Map()).toSeq.find(
-          keyValue => keyValue._1 == "content-type").map(_._2).getOrElse("binary"), event)
-      )
+        entity)
     val response = Source.single(request).via(handlerFlow).toMat(Sink.head)(Keep.right).run()
     val responseString = response.map(_.entity.toString)
     Await.result(responseString, 30 seconds)

@@ -1,14 +1,28 @@
 package io.github.silvaren
 
 
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
+import java.io.File
+
+import akka.actor.ActorSystem
+import akka.http.scaladsl.model.Multipart.FormData.BodyPart
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.{Directives, Route}
+import akka.stream.Materializer
+import akka.stream.scaladsl.FileIO
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class CoolClass(coolProperty: String, anotherProperty: String)
 
 trait StatusService extends BaseService {
   import Directives._
   import io.circe.generic.auto._
+
+  implicit val system: ActorSystem
+
+  implicit val materializer: Materializer
 
   protected case class Status(uptime: String)
 
@@ -68,9 +82,21 @@ trait StatusService extends BaseService {
         }
       } ~
       path("formdata") {
-        post {
-          formFields('aFormKey, 'anotherFormKey, 'aFormFileKey) { (formKey, anotherFormKey, aFormFileKey) =>
-            complete(s"The first path param is '${formKey}' and the second one is '${anotherFormKey}' and $aFormFileKey")
+        (post & entity(as[Multipart.FormData])){ formData =>
+//          formFields('aFormKey, 'anotherFormKey, 'aFormFileKey) { (formKey, anotherFormKey, aFormFileKey) =>
+//            complete(s"The first path param is '${formKey}' and the second one is '${anotherFormKey}' and $aFormFileKey")
+//          }
+          complete {
+            val extractedData: Future[Map[String, Any]] = formData.parts.mapAsync[(String, Any)](1) {
+
+              case file: BodyPart if file.name == "file" => val tempFile = File.createTempFile("process", "file")
+                file.entity.dataBytes.runWith(FileIO.toPath(tempFile.toPath)).map { ioResult =>
+                  s"file ${file.filename.fold("Unknown")(identity)}" -> s"${ioResult.count} bytes"
+                }
+
+              case data: BodyPart => data.toStrict(2.seconds).map(strict => data.name -> strict.entity.data.utf8String)
+            }.runFold(Map.empty[String, Any])((map, tuple) => map + tuple)
+            extractedData.map { data => HttpResponse(StatusCodes.OK, entity = s"Data : ${data.mkString(", ")} has been successfully saved.")}
           }
         }
       } ~

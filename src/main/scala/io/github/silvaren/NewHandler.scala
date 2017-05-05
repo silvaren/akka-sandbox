@@ -2,6 +2,8 @@ package io.github.silvaren
 
 import java.io.{InputStream, OutputStream}
 
+import akka.actor.ActorSystem
+import akka.stream.ActorMaterializer
 import com.amazonaws.services.lambda.runtime.{Context, RequestStreamHandler}
 import io.circe.syntax._
 import io.circe.generic.auto._
@@ -9,6 +11,9 @@ import io.circe.generic.auto._
 case class IntegrationResponse(statusCode: Int, headers: Option[Map[String,String]], body: String)
 
 object NewHandler extends RequestStreamHandler with Config with Services {
+
+  implicit val system       = ActorSystem()
+  implicit val materializer = ActorMaterializer()
 
   val server = new Server(routes)
 
