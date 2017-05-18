@@ -18,7 +18,6 @@ case class CoolClass(coolProperty: String, anotherProperty: String)
 
 trait StatusService extends BaseService {
   import Directives._
-  import io.circe.generic.auto._
 
   implicit val system: ActorSystem
 
@@ -75,6 +74,8 @@ trait StatusService extends BaseService {
         }
       } ~
       path("jsonbody") {
+        import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+        import io.circe.generic.auto._
         post {
           entity(as[CoolClass]) { coolClass =>
             complete(s"The first path param is '${coolClass.coolProperty}' and the second one is '${coolClass.anotherProperty}'")
@@ -82,21 +83,9 @@ trait StatusService extends BaseService {
         }
       } ~
       path("formdata") {
-        (post & entity(as[Multipart.FormData])){ formData =>
-//          formFields('aFormKey, 'anotherFormKey, 'aFormFileKey) { (formKey, anotherFormKey, aFormFileKey) =>
-//            complete(s"The first path param is '${formKey}' and the second one is '${anotherFormKey}' and $aFormFileKey")
-//          }
-          complete {
-            val extractedData: Future[Map[String, Any]] = formData.parts.mapAsync[(String, Any)](1) {
-
-              case file: BodyPart if file.name == "file" => val tempFile = File.createTempFile("process", "file")
-                file.entity.dataBytes.runWith(FileIO.toPath(tempFile.toPath)).map { ioResult =>
-                  s"file ${file.filename.fold("Unknown")(identity)}" -> s"${ioResult.count} bytes"
-                }
-
-              case data: BodyPart => data.toStrict(2.seconds).map(strict => data.name -> strict.entity.data.utf8String)
-            }.runFold(Map.empty[String, Any])((map, tuple) => map + tuple)
-            extractedData.map { data => HttpResponse(StatusCodes.OK, entity = s"Data : ${data.mkString(", ")} has been successfully saved.")}
+        post {
+          formFields('aFormKey, 'anotherFormKey, 'aFormFileKey) { (formKey, anotherFormKey, aFormFileKey) =>
+            complete(s"The first path param is '${formKey}' and the second one is '${anotherFormKey}' and $aFormFileKey")
           }
         }
       } ~

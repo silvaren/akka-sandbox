@@ -3,6 +3,7 @@ package io.github.silvaren
 import akka.http.scaladsl.model.StatusCodes
 
 class StatusServiceTest extends ServiceTestBase with StatusService {
+  import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
   import io.circe.generic.auto._
 
   "StatusService" when {

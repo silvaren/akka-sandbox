@@ -16,7 +16,7 @@ trait BaseComponent extends Config {
   protected implicit def executor: ExecutionContext
 }
 
-trait BaseService extends CirceSupport {
+trait BaseService {
   protected def routes: Route
 }
 
